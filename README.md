@@ -1,25 +1,147 @@
-I would like to provide an update on the recent WebLogic patching activity that was completed successfully. However, there are some open points that I would like to bring to your attention for further discussion and resolution.
+import java.security.cert.TrustAnchor
+import java.sql.Connection
+import javax.net.ssl.SSLContext
+import groovy.json.JsonSlurper
+import javax.net.ssl.HostnameVerifier
+import javax.net.ssl.HttpsURLConnection
+import javax.net.ssl.SSLContext
+import javax.net.ssl.TrustManager
+import javax.net.ssl.X509TrustManager
+import java.io.OutputStream
+import groovy.json.*
+import groovy.transform.Field
 
-1. Standard Naming Convention for Start/Stop Scripts:
-	As previously informed, we had requested for the start/stop scripts to follow a standard naming convention to facilitate automation.
+//Intiating varaibles
+@Field def url = "https://ip:8443"
+@Field def username = "admin"
+@Field def password = "password"
+@Field def ApplicationName = "JBOSS_TEST_30.43"
+@Field def UserName = "root"
+@Field def CurrentAgentUser = "${p:agent/USER}"
+//Encoding username and password
+@Field String encoding = Base64.getEncoder().encodeToString(( username + ":" + password ).getBytes("UTF-8"));
 
-2. Applying patch on Master and Slave Servers:
-	The patch needs to be applied on both the WebLogic master and slave servers. On the master server, we need to start/stop the Admin, Node Manager, and JVM. On the slave server, we only need to stop and start the Node Manager and JVM.
+def hostnames = "DTPL-LPT-47" 
+//hostnames = hostnames.replace(".YESBANK.IN","").replace(".YESBANK.COM","")
 
-3. Handling Different WebLogic Home Paths:
-	Due to variations in the WebLogic Home path for some applications, we request to keep a single "weblogic.property" file in the path "/weblogic/script" where our scripts will be stored. This will help overcome the challenge of different WebLogic Home paths and ensure consistency in our deployment scripts.
+//Method to retrieve Agents
+def getAgents(){
+    
+    //API URL
+    def uri = "https://192.168.30.43:8443/rest/agent?rowsPerPage=250&pageNumber=1&orderField=name&sortType=asc"
+    
+    // Create a StringBuilder to hold the data
+    StringBuilder data = new StringBuilder()
+    
+    //Creating object to accept all hostnames
+    def nullHostnameVerifier = [
+        verify:{hostname, session -> true} 
+    ]
+    
+    //Accept all certificate ignore SSL check
+    def sc = SSLContext.getInstance("SSL")
+    def trustAll = [getAcceptedIssuers: {}, checkClientTrusted: { a, b -> }, checkServerTrusted: { a, b -> }]
+    sc.init(null, [trustAll as X509TrustManager] as TrustManager[], null);
+    HttpsURLConnection.defaultSSLSocketFactory = sc.socketFactory;
+    HttpsURLConnection.setDefaultHostnameVerifier(nullHostnameVerifier as HostnameVerifier);
+    
+    //Setting up connection
+    def connection = new URL(uri).openConnection() as HttpURLConnection
+    
+    //Setting Headers
+    connection.setRequestMethod("GET");
+    connection.setRequestProperty("Accept", "application/json")
+    connection.setRequestProperty("Authorization","Basic " + encoding)
+     
+    //println"===========================Response Headers============================================="
+    Map<String, List<String>> map = connection.getHeaderFields();
+    for(Map.Entry<String, List<String>> entry : map.entrySet()){
+        //println"${entry.getKey()}:${entry.getValue()}"
+    }
+    //println"========================================================================================"
+    
+    if ( connection.responseCode == 200) {
+        // get the JSON response
+        json = connection.inputStream.withCloseable { inStream ->
+                        new JsonSlurper().parse( inStream as InputStream )
+        }
+        //retrieve data from JSON
+        for (entry in json) {
+            // retrieve data from each entry
+            println "________________________Agent Details___________________________________________"
+            def name = entry.name
+            def licenseType = entry.licenseType
+            def status = entry.status
+            def Ip=getAgentIpAndOsType(name,"ip")
+            def OS=getAgentIpAndOsType(name,"sys.os.name")
+            println "Adding ${name},${licenseType},${status},${Ip},${OS} into agent.txt file"
+            println "_________________________________________________________________________________"
+            data.append("$name,$licenseType,$status,$Ip,$OS\n")
+        }
+         
+        // Write data to text file
+        File file = new File("agents.txt")
+        file.write(data.toString())
+        println "Data written to agents.txt successfully."
+    }else if(connection.responseCode == 404){
+        //Do nothing
+    }else {
+        //Do nothing
+    }
+}
 
-In addition to the WebLogic patching activity, I would also like to share the proposed flow for OHS (Oracle HTTP Server) deployment as follows:
+// 
+def getAgentIpAndOsType(String AgentName,String Property){
+    
+    //API URL
+    def uri = "https://192.168.30.43:8443/cli/agentCLI/getProperty?agent=${AgentName}&name=${Property}"
+    
+    //Creating object to accept all hostnames
+    def nullHostnameVerifier = [
+        verify:{hostname, session -> true} 
+    ]
+    
+    //Accept all certificate ignore SSL check
+    def sc = SSLContext.getInstance("SSL")
+    def trustAll = [getAcceptedIssuers: {}, checkClientTrusted: { a, b -> }, checkServerTrusted: { a, b -> }]
+    sc.init(null, [trustAll as X509TrustManager] as TrustManager[], null);
+    HttpsURLConnection.defaultSSLSocketFactory = sc.socketFactory;
+    HttpsURLConnection.setDefaultHostnameVerifier(nullHostnameVerifier as HostnameVerifier);
+    
+    //Setting up connection
+    def connection = new URL(uri).openConnection() as HttpURLConnection
+    
+    //Setting Headers
+    connection.setRequestMethod("GET");
+    connection.setRequestProperty("Accept", "text/plain")
+    connection.setRequestProperty("Authorization","Basic " + encoding)
+     
+    //println"===========================Response Headers============================================="
+    Map<String, List<String>> map = connection.getHeaderFields();
+    for(Map.Entry<String, List<String>> entry : map.entrySet()){
+        //println"${entry.getKey()}:${entry.getValue()}"
+    }
+   // println"========================================================================================"
+    
+    if ( connection.responseCode == 200) {
+        // get the plain text response
+        def inputStream = connection.inputStream
+        def reader = new BufferedReader(new InputStreamReader(inputStream))
+        def response = ''
+        String line
+        while ((line = reader.readLine()) != null) {
+            response += line
+        }
+        reader.close()
+        inputStream.close()
 
-OHS Deployment Flow:
+        //println "Response: ${response}"
+        return response // Store response in a variable            
+    }else if(connection.responseCode == 404){
+        //Do nothing
+    }else {
+        //Do nothing
+    }
+}
 
-1. Stop the OHS components.
-2. Stop the Node Manager.
-3. Take a backup of the "wlserver" and "Opatch" servers.
-4. Move the updated file and apply the patch.
-5. If any errors occur during patch application, perform a rollback.
-6. Start the Node Manager.
-7. Start the OHS components.
-8. Please review and confirm if the proposed OHS deployment flow aligns with your expectations. We also request for the deployment document for OHS deployment, including the necessary deployment commands.
-
-Please note that due to server access issues, we were unable to complete OHS deployment testing. We have reached out to the PIM team to resolve this matter. In the meantime, we will be working on the OHS configuration and improving the current deployment flow.
+getAgents()

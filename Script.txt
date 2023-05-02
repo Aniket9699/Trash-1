@@ -1,0 +1,36 @@
+echo "=================================================="
+echo "Checking If ${p:FolderName} is present or not"
+echo "=================================================="
+
+cd ${p:DownloadArtifacts}/APP
+TextFileDeployment=""
+ArtifactLocation=""
+if [[ "${p:FolderName}" == "INT" ]]; then
+    cd ${p:DownloadArtifacts}/APP
+    if [[ -d "INT" ]]; then
+    	echo "INT is present at target location"
+    	cat ${p:TextFilePath} | grep INT > ${p:DownloadArtifacts}/INT.txt
+    	TextFileDeployment="${p:DownloadArtifacts}/INT.txt"
+    	ArtifactLocation="${p:DownloadArtifacts}/APP/INT"
+    else
+    	echo "INT is Missing from location"
+    fi
+elif [[ "${p:FolderName}" == "EXT" ]]; then
+    cd ${p:DownloadArtifacts}/APP
+    if [[ -d "EXT" ]]; then
+    	echo "EXT is present at target location"
+    	cat ${p:TextFilePath} | grep EXT > ${p:DownloadArtifacts}/EXT.txt
+    	TextFileDeployment="${p:DownloadArtifacts}/EXT.txt"
+    	ArtifactLocation="${p:DownloadArtifacts}/APP/EXT"
+    else
+    	echo "EXT is Missing from location"
+    fi
+else
+    TextFileDeployment="${p:TextFilePath}"
+    ArtifactLocation="${p:DownloadArtifacts}/APP"
+fi
+
+echo "Text File For Deployment == "$TextFileDeployment
+echo "Artifact Location == "$ArtifactLocation
+echo "*************************************************************************"
+cat $TextFileDeployment

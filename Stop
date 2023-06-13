@@ -1,0 +1,25 @@
+# Function to stop a server
+def stop_server(server_name):
+    try:
+        print("Stopping server:", server_name)
+        shutdown(server_name, 'Server', force='true', block='true')
+        print("Server stopped successfully.")
+    except:
+        print("Error stopping server:", server_name)
+
+# Connect to the WebLogic Admin Server
+connect('weblogic', 'weblogic@123', 't3://localhost:7001')
+
+# Get the name of the target machine
+target_machine = 'Machine-0'
+
+# Get the running servers on the target machine
+servers = cmo.getServers()
+for server in servers:
+    server_name = server.getName()
+    server_machine = server.getMachine()
+    if server_machine is not None and server_machine.getName() == target_machine:
+        stop_server(server_name)
+
+# Disconnect from the server
+disconnect()

@@ -18,3 +18,13 @@ if exist "%filename%" (
 ) else (
     echo File does not exist
 )
+
+
+----------------------------------------------------------------
+def timestamp = 1625406000L // Replace with your timestamp
+
+def date = new Date(timestamp * 1000)
+def dateFormat = new java.text.SimpleDateFormat('yyyy-MM-dd')
+
+def dateStr = dateFormat.format(date)
+println "Converted Date: $dateStr"

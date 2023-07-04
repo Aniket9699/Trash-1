@@ -21,11 +21,13 @@ if exist "%filename%" (
 
 
 ----------------------------------------------------------------
-def unixTimestamp = 1625413500
+def convertTimestampToDate(timestamp) {
+    def date = new Date(timestamp)
+    def formattedDate = date.format("yyyy-MM-dd HH:mm:ss")
+    return formattedDate
+}
 
-def date = new Date(unixTimestamp * 1000L)
-
-def formattedDate = date.format("yyyy-MM-dd HH:mm:ss")
-
-println(formattedDate)
+def timestamp = ${p:Date}
+def formattedDate = convertTimestampToDate(timestamp)
+println("Date: $formattedDate")
 

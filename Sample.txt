@@ -21,10 +21,11 @@ if exist "%filename%" (
 
 
 ----------------------------------------------------------------
-def timestamp = 1625406000L // Replace with your timestamp
+def unixTimestamp = 1625413500
 
-def date = new Date(timestamp * 1000)
-def dateFormat = new java.text.SimpleDateFormat('yyyy-MM-dd')
+def date = new Date(unixTimestamp * 1000L)
 
-def dateStr = dateFormat.format(date)
-println "Converted Date: $dateStr"
+def formattedDate = date.format("yyyy-MM-dd HH:mm:ss")
+
+println(formattedDate)
+

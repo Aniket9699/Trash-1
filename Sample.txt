@@ -23,11 +23,20 @@ if exist "%filename%" (
 ----------------------------------------------------------------
 def convertTimestampToDate(timestamp) {
     def date = new Date(timestamp)
-    def formattedDate = date.format("yyyy-MM-dd HH:mm:ss")
+    def formattedDate = date.format("d MMM yyyy HH:mm:ss")
+    return formattedDate
+}
+
+
+def convertToDate(timestamp) {
+    def date = new Date(timestamp)
+    def formattedDate = date.format("d MMM yyyy")
     return formattedDate
 }
 
 def timestamp = ${p:Date}
 def formattedDate = convertTimestampToDate(timestamp)
 println("Date: $formattedDate")
+def Date = convertToDate(timestamp)
+println("Date: $Date")
 

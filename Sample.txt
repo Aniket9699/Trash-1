@@ -54,3 +54,49 @@ Ticket_Type
 Ticket_Number
 StartTime
 EndTime
+
+====================================================================================
+
+def convertTimestampToDate(timestamp) {
+    def date = new Date(timestamp)
+    def formattedDate = date.format("d MMM yyyy hh:mm:ss a")
+    return formattedDate
+}
+
+def convertToDate(timestamp) {
+    def date = new Date(timestamp)
+    def formattedDate = date.format("d MMM yyyy")
+    return formattedDate
+}
+
+def convertToTime(timestamp) {
+    def date = new Date(timestamp)
+    def formattedDate = date.format("hh:mm:ss a")
+    return formattedDate
+}
+
+def timestamp = ${p:StartTime}
+def formattedDate = convertToDate(timestamp)
+println("StartDate: $formattedDate")
+
+def timestamp3 = ${p:StartTime}
+def formattedTime = convertToTime(timestamp3)
+println("StartTime: $formattedTime")
+
+def timestamp2 = ${p:EndTime}
+def formattedDate2 = convertToDate(timestamp2)
+println("EndDate: $formattedDate2")
+
+def timestamp1 = ${p:EndTime}
+def formattedTime1 = convertToTime(timestamp1)
+println("EndTime: $formattedTime1")
+
+def inputString = "${p:Release_ID}"
+def outputString = inputString.replace(",","^|")
+println("ReleaseID: $outputString")
+
+def inputString1 = "${p:Ticket_Number}"
+def outputString1 = inputString1.replace(",","^|")
+println("Ticket Number: $outputString1")
+
+

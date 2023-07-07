@@ -1,62 +1,3 @@
-@echo off
-
-set timestamp=${p:Date}
-
-REM Extract current date components
-for /f "tokens=2 delims==" %%A in ('wmic os get LocalDateTime /value ^| findstr "="') do set "datetime=%%A"
-set "year=%datetime:~0,4%"
-set "month=%datetime:~4,2%"
-set "day=%datetime:~6,2%"
-
-REM Format date components into a date string
-set "date_str=%year%-%month%-%day%"
-
-echo %date_str%
-
-if exist "%filename%" (
-    echo File exists
-) else (
-    echo File does not exist
-)
-
-
-----------------------------------------------------------------
-def convertTimestampToDate(timestamp) {
-    def date = new Date(timestamp)
-    def formattedDate = date.format("d MMM yyyy HH:mm:ss")
-    return formattedDate
-}
-
-
-def convertToDate(timestamp) {
-    def date = new Date(timestamp)
-    def formattedDate = date.format("d MMM yyyy")
-    return formattedDate
-}
-
-def timestamp = ${p:Date}
-
-def formattedDate = convertTimestampToDate(timestamp)
-println("Date: $formattedDate")
-def Date = convertToDate(timestamp)
-println("Date: $Date")
-
-===================================================================================
-
-Application_Name
-Release_ID
-Deployed_Artifacts
-Method_of_Deployment
-Environment
-Live_Or_nonLive
-Deployment_Or_Activity
-Ticket_Type
-Ticket_Number
-StartTime
-EndTime
-
-====================================================================================
-
 def convertTimestampToDate(timestamp) {
     def date = new Date(timestamp)
     def formattedDate = date.format("d MMM yyyy hh:mm:ss a")
@@ -91,12 +32,85 @@ def timestamp1 = ${p:EndTime}
 def formattedTime1 = convertToTime(timestamp1)
 println("EndTime: $formattedTime1")
 
-def inputString = "${p:Release_ID}"
-def outputString = inputString.replace(",","^|")
-println("ReleaseID: $outputString")
 
-def inputString1 = "${p:Ticket_Number}"
-def outputString1 = inputString1.replace(",","^|")
-println("Ticket Number: $outputString1")
+=================================================
+
+@Grab('org.apache.poi:poi-ooxml:5.0.0')
+
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
+import java.nio.file.Files
+
+def outputFile = new File("new_file.xlsx")
+def workbook
+
+if (outputFile.exists()) {
+    workbook = new XSSFWorkbook(new FileInputStream(outputFile))
+} else {
+    workbook = new XSSFWorkbook()
+}
+
+def sheet = workbook.getSheet("Deployment Data") ?: workbook.createSheet("Deployment Data")
+
+// Check if the sheet is empty
+def isFirstEntry = sheet.lastRowNum == 0
+
+// If it's the first entry, add the column headers
+if (isFirstEntry) {
+    def headerRow = sheet.createRow(0)
+    headerRow.createCell(0).setCellValue("Application Name")
+    headerRow.createCell(1).setCellValue("Release ID")
+    headerRow.createCell(2).setCellValue("Deployed Artifacts")
+    headerRow.createCell(3).setCellValue("Method of Deployment")
+    headerRow.createCell(4).setCellValue("Environment")
+    headerRow.createCell(5).setCellValue("Live or Non-Live")
+    headerRow.createCell(6).setCellValue("Deployment or Activity")
+    headerRow.createCell(7).setCellValue("Ticket Type")
+    headerRow.createCell(8).setCellValue("Ticket Number")
+    headerRow.createCell(9).setCellValue("Start Time")
+    headerRow.createCell(10).setCellValue("End Time")
+}
+
+// Store the values 
+def Application_Name="${p:Application_Name}"
+def Release_ID="${p:Release_ID}"
+def Deployed_Artifacts="${p:Deployed_Artifacts}"
+def Method_of_Deployment="${p:Method_of_Deployment}"
+def Environment="${p:Environment}"
+def Live_Or_nonLive="${p:Live_Or_nonLive}"
+def Deployment_Or_Activity="${p:Deployment_Or_Activity}"
+def Ticket_Type="${p:Ticket_Type}"
+def Ticket_Number="${p:Ticket_Number}"
+def StartTime="${p:StartTime}"
+def EndTime="${p:EndTime}"
+// Find the last row index
+def lastRowIndex = sheet.lastRowNum
+
+// Create a new row for the new data
+def newRow = sheet.createRow(lastRowIndex + 1)
+newRow.createCell(0).setCellValue("$Application_Name")
+newRow.createCell(1).setCellValue("$Release_ID")
+newRow.createCell(2).setCellValue("$Deployed_Artifacts")
+newRow.createCell(3).setCellValue("$Method_of_Deployment")
+newRow.createCell(4).setCellValue("$Environment")
+newRow.createCell(5).setCellValue("$Live_Or_nonLive")
+newRow.createCell(6).setCellValue("$Deployment_Or_Activity")
+newRow.createCell(7).setCellValue("$Ticket_Type")
+newRow.createCell(8).setCellValue("$Ticket_Number")
+newRow.createCell(9).setCellValue("$StartTime")
+newRow.createCell(10).setCellValue("$EndTime")
+
+// Auto-size the columns for better readability (optional)
+for (int i = 0; i < 11; i++) {
+    sheet.autoSizeColumn(i)
+}
+
+// Save the workbook to the file
+outputFile.withOutputStream { outputStream ->
+    workbook.write(outputStream)
+}
+
+workbook.close()
+println("Adding $Application_Name $Release_ID $Deployed_Artifacts $Method_of_Deployment $Environment $Live_Or_nonLive $Deployment_Or_Activity $Ticket_Type $Ticket_Number $StartTime $EndTime into Tracker-Sheet")
+println "Data written to ${outputFile.absolutePath}"
 
 

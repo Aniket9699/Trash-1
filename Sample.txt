@@ -35,8 +35,22 @@ def convertToDate(timestamp) {
 }
 
 def timestamp = ${p:Date}
+
 def formattedDate = convertTimestampToDate(timestamp)
 println("Date: $formattedDate")
 def Date = convertToDate(timestamp)
 println("Date: $Date")
 
+===================================================================================
+
+Application_Name
+Release_ID
+Deployed_Artifacts
+Method_of_Deployment
+Environment
+Live_Or_nonLive
+Deployment_Or_Activity
+Ticket_Type
+Ticket_Number
+StartTime
+EndTime
